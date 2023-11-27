@@ -1,0 +1,28 @@
+# Sample Python grading helper scripts config
+# Copy as grading-config.yaml and modify your desired options
+
+google_auth:
+  # Path to your OAuth2 Client ID
+  credentials: "./path/to/credentials.json"
+  # where to cache OAuth2 token (make sure it's not readable by other users!)
+  token: "~/.cache/.grader-gsheets-token.json"
+
+# gsheet-tool configuration:
+google_sheets:
+  # ID of the spreadsheet to fetch / update
+  id: "<G ID Here>"
+  # data cache file
+  cache: ".cache.json"
+  # A1-notation of range(s) to fetch.
+  # Must include header row!
+  sheetRanges: ["Catalog!A1:Z1000"]
+  # Column patterns for property naming
+  columnPatterns:
+    fullname: 'nume'
+    username: 'username'
+    # Wildcard match: renames all matching columns as first RegEx group
+    "_lab\\1": ["lab.*([0-9]+)"]
+  # printing formats
+  listFormat: "{a1_str} | {username} ({fullname})"
+  infoFormat: "{a1_str} | {obj_str}"
+
