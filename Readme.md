@@ -4,6 +4,8 @@ This repository contains a series of utility scripts that can be used by
 _somewhat technically-proficient_ teachers to automate their activity
 / assignment grading workflows (for Google Sheets only; Moodle script is WIP).
 
+[![asciicast](https://asciinema.org/a/653842.svg)](https://asciinema.org/a/653842)
+
 **Features:**
 
 - FZF (fuzzy finder) TUI tool for quickly searching names in a gradebook and
