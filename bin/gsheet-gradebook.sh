@@ -54,7 +54,7 @@ function cmd_get_metadata() {
     "$GSHEET_TOOL" get_metadata
 }
 
-function cmd_fetch_row() {
+function cmd_refresh() {
     "$GSHEET_TOOL" fetch_data --filter-range "$S_ROW_A1"
 }
 
@@ -92,9 +92,9 @@ function grading_menu() {
                 cmd_show_info "${args[@]}" || true ;;
             metadata)
                 cmd_get_metadata "${args[@]}" || true ;;
-            g|get)
-                cmd_fetch_row "${args[@]}" || true ;;
-            u|update)
+            r|efresh)
+                cmd_refresh "${args[@]}" || true ;;
+            u|update|set)
                 cmd_update_cell "${args[@]}" || true ;;
             q|quit*)
                 S_ROW_A1= 
