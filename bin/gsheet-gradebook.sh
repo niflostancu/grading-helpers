@@ -73,7 +73,7 @@ function grading_menu() {
     echo
     local _CUR_INFO="$(cmd_show_info)"
     echo "[GRADER] Current row: $_CUR_INFO"
-    echo "[GRADER] Enter command ([i]nfo | [g]et | [u]pdate | [q]uit):"
+    echo "[GRADER] Enter command ([i]nfo | [r]efresh | [u]pdate | [q]uit):"
     read -e -p "> " raw_cmd || {
         # Ctrl+D pressed
         S_ROW_A1= 
