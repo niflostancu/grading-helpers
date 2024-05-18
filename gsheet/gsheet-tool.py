@@ -17,10 +17,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-SAMPLE_RANGE_NAME = "Class Data!A2:E"
-
 CONFIG_FILE = "grading-config.yaml"
 CACHE_FILE = ".index.csv"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
