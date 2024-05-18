@@ -13,6 +13,7 @@ import re
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -70,22 +71,28 @@ def column_idx_to_letter(column):
 def auth_credentials(authConfig):
     """ Returns authentication object for Google Sheets. """
     creds = None
-    tokenFile = os.path.expanduser(authConfig.get("token", ".token.json"))
-    if os.path.exists(tokenFile):
-        creds = Credentials.from_authorized_user_file(tokenFile, SCOPES)
-    if not creds or not creds.valid:
-        # no (valid) credentials available => start the login process
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                    os.path.expanduser(authConfig.get("credentials",
-                                                      "credentials.json")), SCOPES)
-            creds = flow.run_local_server(port=0)
-        # save the credentials for the next run
-        with open(tokenFile, "w") as token:
-            token.write(creds.to_json())
-            os.chmod(tokenFile, stat.S_IRUSR | stat.S_IWUSR)
+    if "serviceAccount" in authConfig and authConfig["serviceAccount"]:
+        # use a service account for auth
+        saFile = os.path.expanduser(authConfig["serviceAccount"])
+        creds = service_account.Credentials.from_service_account_file(
+            filename=saFile, scopes=SCOPES)
+    else:
+        tokenFile = os.path.expanduser(authConfig.get("token", ".token.json"))
+        if os.path.exists(tokenFile):
+            creds = Credentials.from_authorized_user_file(tokenFile, SCOPES)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                print("Credentials expired, please re-authenticate...")
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    os.path.expanduser(
+                        authConfig.get("credentials", "credentials.json")), SCOPES)
+                creds = flow.run_local_server(port=0)
+            # save the credentials for the next run
+            with open(tokenFile, "w") as token:
+                token.write(creds.to_json())
+                os.chmod(tokenFile, stat.S_IRUSR | stat.S_IWUSR)
     return creds
 
 def get_spreadsheet(creds, spreadsheet_id, range_str):

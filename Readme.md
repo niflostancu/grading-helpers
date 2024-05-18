@@ -30,9 +30,31 @@ In order to use the Google Sheets API, you must first create a personal project
 on [Google Cloud](https://console.cloud.google.com/).
 In there, make sure to enable the [Google Sheets API](https://console.cloud.google.com/apis/enableflow?apiid=sheets.googleapis.com).
 
-Next must obtain a Google OAuth client credentials by [following this
+You have two choices for authorizing access to your spreadsheets:
+
+#### 1. Use Desktop Application OAuth consent tokens (not recommended)
+
+This will allow you to edit all documents that your Google account has
+permissions for. The downside is that the consent must be re-approved
+periodically, since the temporary token expires after several days of API
+inactivity.
+
+Obtain the Google OAuth client credentials by [following this
 tutorial](https://developers.google.com/workspace/guides/configure-oauth-consent).
-Save the client credentials `.json` file somewhere safe.
+Save the client credentials `.json` file somewhere safe and fill the
+`google_auth.credentials` (path to the OAuth credentials JSON file) and
+`google_auth.token` (path to a temporary token cache) yaml config properties.
+
+#### 2. Use a Service Account (persistent token, documents must be manually shared)
+
+Generate a Service Account by navigating (within the Google Cloud Console) to
+`APIs & Services -> Credentials -> create Service Acccount`. Save the private
+key JSON somewhere safe and give out its path using the
+`google_auth.serviceAccount` yaml property!
+
+Next, you must share your documents with your service account's email (with Edit
+permissions, ofc!). The advantage is that the token doesn't expire, so you won't
+need to approve the Google Account consent form every time it expires!
 
 ### Script setup & activation
 
@@ -113,4 +135,3 @@ To fix this, simply delete the file where `google_auth.token` points to and
 retry (you will have to re-authenticate the script, though).
 
 This will be fixed once [and if] a public shared API key is obtained.
-

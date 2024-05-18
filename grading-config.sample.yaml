@@ -3,9 +3,11 @@
 
 google_auth:
   # Path to your OAuth2 Client ID
-  credentials: "./path/to/credentials.json"
+  credentials: "/path/to/credentials.json"
   # where to cache OAuth2 token (make sure it's not readable by other users!)
   token: "~/.cache/.grader-gsheets-token.json"
+  # ... or delete the above and uncomment to use a service account:
+  #serviceAccount: "/path/to/serviceAccountKey.json"
 
 # gsheet-tool configuration:
 google_sheets:
