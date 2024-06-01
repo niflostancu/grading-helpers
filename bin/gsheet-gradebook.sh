@@ -9,32 +9,39 @@ shopt -s extglob
     exit 1
 }
 
+source "$_GRADING_SCRIPTS_DIR/shell/readline.sh"
+source "$_GRADING_SCRIPTS_DIR/shell/interactive_menu.sh"
+
 # parse arguments (TODO: add help msg)
 FZF="${FZF:-fzf}"
 NO_FETCH=
-INFINITE=
 GSHEET_TOOL="$_GRADING_SCRIPTS_DIR/gsheet/gsheet-tool.py"
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         -n|--no-fetch)
             NO_FETCH=1 ;;
-        -i|--infinite)
-            INFINITE=1 ;;
     esac; shift
 done
-
-# persistent prompt history
-HISTFILE="$(pwd)"/.grading_history
-history -c
-history -r || true
-trap 'history -a; exit' 0 1 2 3 4 5 6 7 8
 
 # global state variables
 S_ROW_A1=
 declare -A S_VALUES=()
+# interactive menu callbacks
+INTERACTIVE_CONFIG[help]="grading_menu_help"
+INTERACTIVE_COMMANDS+=(
+    [info]=cmd_show_info [i]='!info'
+    [refresh]=cmd_refresh [r]='!refresh'
+    [update]=cmd_update_cell [set]='!update' [u]='!update'
+    [metadata]=cmd_get_metadata
+)
 
 function refresh_spreadsheet() {
     "$GSHEET_TOOL" fetch_data
+}
+
+function grading_select_row() {
+    S_ROW_A1=$1
+    _INTERACTIVE_HELP_SHOWN=
 }
 
 function cmd_update_cell() {
@@ -44,18 +51,22 @@ function cmd_update_cell() {
     done
     "$GSHEET_TOOL" update --a1 "$S_ROW_A1" "${_ARGS[@]}"
 }
-
 # Shows info about current range
 function cmd_show_info() {
     "$GSHEET_TOOL" fetch_data --cached --filter-range "$S_ROW_A1"
 }
-
 function cmd_get_metadata() {
     "$GSHEET_TOOL" get_metadata
 }
-
 function cmd_refresh() {
     "$GSHEET_TOOL" fetch_data --filter-range "$S_ROW_A1"
+}
+
+function grading_menu_help() {
+    echo
+    local _CUR_INFO="$(cmd_show_info)"
+    echo "[GRADER] Current row: $_CUR_INFO"
+    interactive_help
 }
 
 # Displays the FZF chooser menu
@@ -65,49 +76,27 @@ function chooser_menu() {
     if [[ -z "$_OPTION" ]]; then
         echo "No choice! Exiting..." >&2; exit 0
     fi
-    S_ROW_A1="${_OPTION%%*( )"|"*}"
+    grading_select_row "${_OPTION%%*( )"|"*}"
 }
 
 # Displays the grading prompt (after a spreadsheet row was chosen)
 function grading_menu() {
-    echo
-    local _CUR_INFO="$(cmd_show_info)"
-    echo "[GRADER] Current row: $_CUR_INFO"
-    echo "[GRADER] Enter command ([i]nfo | [r]efresh | [u]pdate | [q]uit):"
-    read -e -p "> " raw_cmd || {
-        # Ctrl+D pressed
-        S_ROW_A1= 
-        return 0
+    interactive_menu || {
+        local ec="$?"
+        if [[ $ec -eq 10 || $ec -eq 11 ]]; then
+            # Ctrl+D / quit called
+            grading_select_row ""
+            return 0
+        fi
     }
-    history -s "$raw_cmd"
-    # split multi-command strings
-    local cmds=()
-    IFS=";" read -ra cmds <<< "$raw_cmd"
-    for cmd in "${cmds[@]}"; do
-        local args=()
-        eval 'IFS=" " args=('$cmd')'
-        cmd=${args[0]}; args=("${args[@]:1}")
-        case "$cmd" in
-            i|info)
-                cmd_show_info "${args[@]}" || true ;;
-            metadata)
-                cmd_get_metadata "${args[@]}" || true ;;
-            r|efresh)
-                cmd_refresh "${args[@]}" || true ;;
-            u|update|set)
-                cmd_update_cell "${args[@]}" || true ;;
-            q|quit*)
-                S_ROW_A1= 
-                return 0 ;;
-            "echo")
-                echo "${args[@]}" ;;
-            *) echo "Invalid command: '$cmd'!" >&2 ;;
-        esac
-    done
 }
 
 # gradebook entry selected, show interactive menu
-refresh_spreadsheet
+[[ "$NO_FETCH" == "1" ]] || refresh_spreadsheet
+
+# enable interactive menu history
+read_hist_init "$(pwd)/.grading_history"
+
 while true; do
     if [[ -z "$S_ROW_A1" ]]; then
         chooser_menu
