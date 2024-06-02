@@ -22,13 +22,15 @@ _INTERACTIVE_HELP_SHOWN=
 
 # Displays help for the interactive menu; may be overridden
 function interactive_help() {
-    local cmds=()
+    local -A cmds=()
+    local scmds=()
     for i in "${!INTERACTIVE_COMMANDS[@]}"; do
         if [[ "${INTERACTIVE_COMMANDS[$i]}" != '!'* ]]; then
             [[ -v "$cmds[$i]" ]] || cmds[$i]=$i
         fi
     done
-    echo "Enter command (${cmds[*]}):"
+    for c in "${!cmds[@]}"; do scmds+=("$c"); done
+    echo "Enter command (${scmds[*]}):"
 }
 # Calls the configured help callback
 function _interactive_help() {
