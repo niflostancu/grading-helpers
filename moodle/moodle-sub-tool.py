@@ -70,6 +70,24 @@ def search_moodle_username(user_id, students_map):
     return None
 
 
+def extract_archive(archive_file, dest_dir):
+    """
+    Extracts a .zip archive to the specified path with smart operation:
+    if the extraction process results in a single child directory, it automatically
+    flattens it.
+    """
+    shutil.unpack_archive(archive_file, dest_dir)
+    os.remove(archive_file)
+    dir_contents = os.listdir(dest_dir)
+    if len(dir_contents) == 1:
+        subdir_full = os.path.join(dest_dir, dir_contents[0])
+        if os.path.isdir(subdir_full):
+            # move all files to the root path
+            with os.scandir(subdir_full) as it:
+                for entry in it:
+                    shutil.move(entry.path, dest_dir)
+
+
 def main(args):
     rdir = args.directory
 
@@ -142,8 +160,7 @@ def main(args):
             print("unzip: '{}'".format(archive_file))
             if not args.dry_run:
                 try:
-                    shutil.unpack_archive(archive_file, full_path)
-                    os.remove(archive_file)
+                    extract_archive(archive_file, full_path)
                 except:
                     traceback.print_exc()
 
